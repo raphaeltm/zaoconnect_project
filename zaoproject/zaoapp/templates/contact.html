@@ -1,32 +1,28 @@
 {% extends 'base.html' %}
 {% block content %}
-    <header>
-      <h1>Contact Us</h1>
-    </header>
     <div class="container mt-5">
-      {% csrf_token %}
-      {%block title%}Testing out the feature{%endblock%}
+      <div class="row justifiey-content-center">
+        <div class="col-md-6">
+          <h2 class="text-center text-success">Contact Us</h2>
+          <p class="text-center">If you have any questions or need further information, please feel free to reach out to us using the form below.</p>
       <form method="POST">
+        {% csrf_token %}
         <div>
-          <label for="name">Name:</label>
-          <input type="text" id="name" name="name" required />
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" required />
         </div>
         <div>
-          <label for="email">Email:</label>
-          <input type="email" id="email" name="email" required />
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" required />
         </div>
         <div>
-          <label for="message">Message:</label>
-          <textarea id="message" name="message" rows="5" required></textarea>
+          <label class="form-label">Message</label>
+          <textarea name="message" rows="5" class="form-control" required></textarea>
         </div>
         <div>
-          <button type="submit">Submit</button>
+          <button type="submit" class="btn btn-primary">Submit</button>
         </div>
       </form>
     </div>
-    <footer>
-      <p>&copy; 2024 Student Management System</p>
-    </footer>
+  </div>
     {% endblock %}
-  </body>
-</html>

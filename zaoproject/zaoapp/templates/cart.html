@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row">
+    <div class="col-md-8">
+      <h2 class="mb-4">Shopping Cart</h2>
+      
+      <div id="cart-items-container">
+        <div class="alert alert-info text-center">
+          <p>Your cart is empty. <a href="{% url 'index' %}">Continue shopping</a></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Order Summary</h5>
+          
+          <div class="d-flex justify-content-between mb-2">
+            <span>Subtotal:</span>
+            <span id="subtotal">Ksh.0.00</span>
+          </div>
+          
+          <div class="d-flex justify-content-between mb-2">
+            <span>Shipping:</span>
+            <span id="shipping">Ksh.0.00</span>
+          </div>
+          
+          <div class="d-flex justify-content-between mb-3 border-top pt-3">
+            <strong>Total:</strong>
+            <strong id="cart-total">Ksh.0.00</strong>
+          </div>
+
+          <button class="w-100 btn btn-primary btn-lg" id="checkout-btn">
+            Proceed to Checkout
+          </button>
+          
+          <a href="{% url 'index' %}" class="w-100 btn btn-outline-secondary mt-2">
+            Continue Shopping
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize cart on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Load cart from localStorage or session
+    loadCart();
+  });
+
+  function loadCart() {
+    // Placeholder for loading cart data
+    // where you connect the backend or local storage
+  }
+
+  document.getElementById('checkout-btn').addEventListener('click', function() {
+    alert('Checkout functionality coming soon!');
+  });
+</script>
+{% endblock %}

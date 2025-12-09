@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-5 text-center">
+            <svg width="48" height="48" class="text-danger mb-3" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10.029 10.029 0 0 0 12 2m0 18a8 8 0 1 1 8-8a8.009 8.009 0 0 1-8 8m1-13h-2v6h2zm0 8h-2v2h2z"/>
+            </svg>
+            <h1 class="h4 mb-3">Delete product</h1>
+            <p class="text-muted mb-4">
+              Are you sure you want to delete <strong>{{ product.name }}</strong>? This action cannot be undone.
+            </p>
+            <form method="post" class="d-flex justify-content-center gap-3">
+              {% csrf_token %}
+              <a href="{% url 'product_admin_list' %}" class="btn btn-outline-secondary">Cancel</a>
+              <button type="submit" class="btn btn-danger">Yes, delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}
+

@@ -1,6 +1,6 @@
-    {% extends 'base.html' %}
-    {% load static %}
-    {% block content %}
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
 
     <section style="background-image: url('{% static 'images/banner-1.jpg' %}');background-repeat: no-repeat;background-size: cover;">
       <div class="container-lg">
@@ -167,7 +167,7 @@
       </div>
     </section>
 
-    <section class="pb-5">
+    <section id="best-selling-products" class="pb-5">
       <div class="container-lg">
 
         <div class="row">
@@ -188,7 +188,72 @@
         <div class="row">
           <div class="col-md-12">
 
-            <div class="product-grid row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5">
+            {% if products %}
+            <div class="product-grid row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5 mb-4">
+              {% for product in products %}
+              <div class="col">
+                <div class="product-item swiper-slide">
+                  <figure>
+                    <a href="/" title="{{ product.name }}">
+                      {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="tab-image">
+                      {% else %}
+                        <img src="{% static 'images/product-thumb-1.png' %}" alt="{{ product.name }}" class="tab-image">
+                      {% endif %}
+                    </a>
+                  </figure>
+                  <div class="d-flex flex-column text-center">
+                    <h3 class="fs-6 fw-normal">{{ product.name }}</h3>
+                    <div>
+                      <span class="rating">
+                        <svg width="18" height="18" class="text-warning"><use xlink:href="#star-full"></use></svg>
+                        <svg width="18" height="18" class="text-warning"><use xlink:href="#star-full"></use></svg>
+                        <svg width="18" height="18" class="text-warning"><use xlink:href="#star-full"></use></svg>
+                        <svg width="18" height="18" class="text-warning"><use xlink:href="#star-full"></use></svg>
+                        <svg width="18" height="18" class="text-warning"><use xlink:href="#star-half"></use></svg>
+                      </span>
+                      <span class="text-muted small">{% if product.stock > 0 %}In stock: {{ product.stock }}{% else %}Out of stock{% endif %}</span>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center gap-2">
+                      <span class="text-dark fw-semibold">Ksh.{{ product.price|floatformat:2 }}</span>
+                      {% if product.description %}
+                      <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">
+                        {{ product.description|truncatechars:20 }}
+                      </span>
+                      {% endif %}
+                    </div>
+                    <div class="button-area p-3 pt-0">
+                      <div class="row g-1 mt-2">
+                        <div class="col-3">
+                          <input type="number" name="quantity" class="form-control border-dark-subtle input-number quantity" value="1" min="1">
+                        </div>
+                        <div class="col-7">
+                          <a href="#" class="btn btn-primary rounded-1 p-2 fs-7 btn-cart" 
+                             data-product-id="{{ product.id }}"
+                             data-product-name="{{ product.name }}"
+                             data-product-price="{{ product.price }}">
+                            <svg width="18" height="18"><use xlink:href="#cart"></use></svg> Add to Cart
+                          </a>
+                        </div>
+                        <div class="col-2">
+                          <a href="#" class="btn btn-outline-dark rounded-1 p-2 fs-6">
+                            <svg width="18" height="18"><use xlink:href="#heart"></use></svg>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+              <p class="text-muted mb-0">No products yet. Add one from the admin dashboard to showcase it here.</p>
+            </div>
+            {% endif %}
+
+            <div class="product-grid row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5" hidden>
                   
               <div class="col">
                 <div class="product-item">
@@ -210,8 +275,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -245,8 +310,8 @@
                       <span>(41)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$54.00</del>
-                      <span class="text-dark fw-semibold">$50.00</span>
+                      <del>Ksh.54.00</del>
+                      <span class="text-dark fw-semibold">Ksh.50.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -280,8 +345,8 @@
                       <span>(32)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$14.00</del>
-                      <span class="text-dark fw-semibold">$12.00</span>
+                      <del>Ksh.14.00</del>
+                      <span class="text-dark fw-semibold">Ksh.12.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -315,8 +380,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -350,8 +415,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -385,8 +450,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -420,8 +485,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -455,8 +520,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -490,8 +555,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -525,8 +590,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -640,8 +705,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -673,8 +738,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -706,8 +771,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -739,8 +804,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -772,8 +837,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -805,8 +870,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -838,8 +903,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -871,8 +936,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -904,8 +969,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1012,8 +1077,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1045,8 +1110,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1078,8 +1143,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1111,8 +1176,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1144,8 +1209,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1177,8 +1242,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1210,8 +1275,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1243,8 +1308,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1276,8 +1341,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1345,8 +1410,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1378,8 +1443,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1411,8 +1476,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1444,8 +1509,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1477,8 +1542,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1510,8 +1575,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1543,8 +1608,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1576,8 +1641,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">
@@ -1609,8 +1674,8 @@
                       <span>(222)</span>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2">
-                      <del>$24.00</del>
-                      <span class="text-dark fw-semibold">$18.00</span>
+                      <del>Ksh.24.00</del>
+                      <span class="text-dark fw-semibold">Ksh.18.00</span>
                       <span class="badge border border-dark-subtle rounded-0 fw-normal px-1 fs-7 lh-1 text-body-tertiary">10% OFF</span>
                     </div>
                     <div class="button-area p-3 pt-0">

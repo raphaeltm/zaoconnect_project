@@ -2,7 +2,7 @@
 {% block content %}
     <div class="container mt-4">
         <h2>Register Here</h2>
-        <form method="post">
+        <form method="POST">
             {% csrf_token %}
             
             {{ form.as_p }}

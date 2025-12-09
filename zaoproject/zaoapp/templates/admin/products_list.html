@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <p class="text-uppercase text-muted small mb-1">Dashboard</p>
+        <h1 class="h3 mb-0">Manage Products</h1>
+      </div>
+      <a href="{% url 'product_create' %}" class="btn btn-primary">Add product</a>
+    </div>
+
+    {% if messages %}
+      <div class="mb-4">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'info' }} mb-2" role="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col" class="text-center">Price</th>
+            <th scope="col" class="text-center">Stock</th>
+            <th scope="col" class="text-center">Active</th>
+            <th scope="col" class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-3">
+                  {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="rounded" style="width: 64px; height: 64px; object-fit: cover;">
+                  {% else %}
+                    <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                      <span class="text-muted small">No image</span>
+                    </div>
+                  {% endif %}
+                  <div>
+                    <span class="fw-semibold d-block">{{ product.name }}</span>
+                    <div class="text-muted small">
+                      {{ product.description|truncatechars:60 }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">Ksh.{{ product.price }}</td>
+              <td class="text-center">{{ product.stock }}</td>
+              <td class="text-center">
+                {% if product.is_active %}
+                  <span class="badge bg-success-subtle text-success">Active</span>
+                {% else %}
+                  <span class="badge bg-secondary-subtle text-secondary">Hidden</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{% url 'product_update' product.pk %}" class="btn btn-sm btn-outline-secondary me-2">Edit</a>
+                <a href="{% url 'product_delete' product.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-5">
+                <p class="mb-1 fw-semibold">No products yet.</p>
+                <p class="text-muted mb-3">Create your first product to get started.</p>
+                <a href="{% url 'product_create' %}" class="btn btn-primary btn-sm">Add product</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock content %}
+
