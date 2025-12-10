@@ -734,11 +734,54 @@
     </div>
     <!--End of the cart-->
 
+      <!--Start of the Wishlist-->
+      <div
+        class="offcanvas offcanvas-end"
+        data-bs-scroll="true"
+        data-bs-backdrop="false"
+        tabindex="-1"
+        id="offcanvasWishlist"
+      >
+        <div class="offcanvas-header justify-content-center">
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+
+        <div class="offcanvas-body">
+          <div class="order-md-last">
+            <h4 class="d-flex justify-content-between align-items-center mb-3">
+              <span class="text-danger">Your Wishlist</span>
+              <span class="badge bg-danger rounded-pill" id="wishlist-sidebar-count">0</span>
+            </h4>
+            <ul class="list-group mb-3" id="wishlist-sidebar-items">
+              <li class="list-group-item text-center text-muted">
+                Your wishlist is empty.
+              </li>
+            </ul>
+
+            <button class="w-100 btn btn-outline-danger btn-lg" id="move-to-cart-btn" disabled>
+              Move to Cart
+            </button>
+          
+            <button class="w-100 btn btn-outline-secondary btn-lg mt-2" id="clear-wishlist-btn" disabled>
+              Clear Wishlist
+            </button>
+          </div>
+        </div>
+      </div>
+      <!--End of the wishlist-->
+
     <script>
-      // WebSocket connection for real-time cart updates
-      const cartSocket = new WebSocket(
-        `ws://${window.location.host}/ws/cart/user/`
-      );
+      // Add top padding to body to prevent content from hiding behind fixed navbar
+      // Increased to match larger navbar/logo size
+      document.body.style.paddingTop = '84px';
+      // WebSocket connection for real-time cart updates (choose ws/wss by page protocol)
+      const _wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const cartSocket = new WebSocket(`${_wsProtocol}://${window.location.host}/ws/cart/user/`);
 
       cartSocket.onopen = function(e) {
         console.log('Cart WebSocket connection established');
@@ -761,6 +804,237 @@
       cartSocket.onerror = function(error) {
         console.error('Cart WebSocket error:', error);
       };
+        // Wishlist functionality - similar to cart
+        (function() {
+          const wishlistStorageKey = 'zaoconnect_wishlist';
+          let wishlist = {};
+
+          const wishlistBadge = document.getElementById('wishlist-badge-count');
+          const wishlistSidebarCount = document.getElementById('wishlist-sidebar-count');
+          const wishlistSidebarItems = document.getElementById('wishlist-sidebar-items');
+          const moveToCartBtn = document.getElementById('move-to-cart-btn');
+          const clearWishlistBtn = document.getElementById('clear-wishlist-btn');
+
+          // Load wishlist from localStorage
+          function loadWishlistFromStorage() {
+            try {
+              const stored = localStorage.getItem(wishlistStorageKey);
+              wishlist = stored ? JSON.parse(stored) : {};
+              console.log('Wishlist loaded from localStorage:', wishlist);
+            } catch (e) {
+              console.error('Error loading wishlist from localStorage:', e);
+              wishlist = {};
+            }
+          }
+
+          // Save wishlist to localStorage
+          function saveWishlistToStorage() {
+            try {
+              localStorage.setItem(wishlistStorageKey, JSON.stringify(wishlist));
+              console.log('Wishlist saved to localStorage');
+            } catch (e) {
+              console.error('Error saving wishlist to localStorage:', e);
+            }
+          }
+
+          function updateWishlistDisplay() {
+            let totalItems = 0;
+
+            for (const productId in wishlist) {
+              totalItems++;
+            }
+
+            // Update badge
+            if (wishlistBadge) {
+              wishlistBadge.textContent = totalItems || 0;
+            }
+
+            // Update sidebar count
+            if (wishlistSidebarCount) {
+              wishlistSidebarCount.textContent = totalItems || 0;
+            }
+
+            // Update sidebar items list
+            if (wishlistSidebarItems) {
+              wishlistSidebarItems.innerHTML = '';
+
+              if (totalItems === 0) {
+                wishlistSidebarItems.innerHTML = '<li class="list-group-item text-center text-muted">Your wishlist is empty.</li>';
+                moveToCartBtn.disabled = true;
+                clearWishlistBtn.disabled = true;
+              } else {
+                for (const productId in wishlist) {
+                  const item = wishlist[productId];
+                  const li = document.createElement('li');
+                  li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                  li.innerHTML = 
+                    '<div>' +
+                      '<h6 class="my-0">' + item.name + '</h6>' +
+                      '<small class="text-body-secondary">' + formatMoney(item.price) + '</small>' +
+                    '</div>' +
+                    '<button class="btn btn-sm btn-outline-danger remove-from-wishlist" data-product-id="' + productId + '">Remove</button>';
+                  wishlistSidebarItems.appendChild(li);
+                }
+                moveToCartBtn.disabled = false;
+                clearWishlistBtn.disabled = false;
+              }
+            }
+
+            saveWishlistToStorage();
+          }
+
+          // Add to wishlist
+          function addToWishlist(productId, productName, productPrice) {
+            if (!wishlist[productId]) {
+              wishlist[productId] = {
+                name: productName,
+                price: productPrice
+              };
+              updateWishlistDisplay();
+              console.log('Item added to wishlist:', { productId, productName, productPrice });
+              // Notify server via WebSocket if available
+              try {
+                if (typeof cartSocket !== 'undefined' && cartSocket.readyState === WebSocket.OPEN) {
+                  cartSocket.send(JSON.stringify({ type: 'wishlist_item_added', data: { id: productId, name: productName, price: productPrice } }));
+                }
+              } catch (e) {
+                console.warn('Unable to send wishlist_item_added via websocket', e);
+              }
+            } else {
+              console.log('Item already in wishlist');
+            }
+          }
+
+          // Remove from wishlist
+          function removeFromWishlist(productId) {
+            if (wishlist[productId]) {
+              delete wishlist[productId];
+              updateWishlistDisplay();
+              console.log('Item removed from wishlist:', productId);
+              // Notify server via WebSocket if available
+              try {
+                if (typeof cartSocket !== 'undefined' && cartSocket.readyState === WebSocket.OPEN) {
+                  cartSocket.send(JSON.stringify({ type: 'wishlist_item_removed', data: { id: productId } }));
+                }
+              } catch (e) {
+                console.warn('Unable to send wishlist_item_removed via websocket', e);
+              }
+            }
+          }
+
+          // Handle add to wishlist clicks (heart icon on products)
+          document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-wishlist');
+            if (!btn) return;
+            e.preventDefault();
+
+            let productId = btn.getAttribute('data-product-id');
+            let productName = btn.getAttribute('data-product-name') || 'Product';
+            let productPrice = parseFloat(btn.getAttribute('data-product-price') || '0');
+
+            // If missing productId, generate one from the product name
+            if (!productId) {
+              const productItem = btn.closest('.product-item');
+              if (productItem) {
+                const nameEl = productItem.querySelector('h3');
+                if (nameEl) {
+                  productName = nameEl.textContent.trim();
+                }
+              
+                const priceEl = productItem.querySelector('.text-dark.fw-semibold');
+                if (priceEl) {
+                  const priceText = priceEl.textContent.trim();
+                  const priceMatch = priceText.match(/Ksh\.[\s]*(\d+(?:\.\d{2})?)/);
+                  if (priceMatch && priceMatch[1]) {
+                    productPrice = parseFloat(priceMatch[1]);
+                  }
+                }
+              }
+            
+              productId = 'product_' + productName.replace(/\s+/g, '_').toLowerCase();
+            }
+
+            if (!productId || productPrice <= 0) {
+              console.warn('Missing or invalid product data', { productId, productName, productPrice });
+              return;
+            }
+
+            addToWishlist(productId, productName, productPrice);
+
+            // Show success feedback
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<svg width="18" height="18"><use xlink:href="#check"></use></svg>';
+            btn.classList.add('disabled');
+            setTimeout(() => {
+              btn.innerHTML = originalHTML;
+              btn.classList.remove('disabled');
+            }, 1500);
+          });
+
+          // Remove from wishlist sidebar
+          document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.remove-from-wishlist');
+            if (!btn) return;
+            const productId = btn.getAttribute('data-product-id');
+            removeFromWishlist(productId);
+          });
+
+          // Move all to cart
+          moveToCartBtn.addEventListener('click', function() {
+            if (Object.keys(wishlist).length === 0) return;
+
+            for (const productId in wishlist) {
+              const item = wishlist[productId];
+              // Add to cart using the cart functionality
+              if (cart[productId]) {
+                cart[productId].qty += 1;
+              } else {
+                cart[productId] = {
+                  name: item.name,
+                  price: item.price,
+                  qty: 1
+                };
+              }
+            }
+
+            updateCartDisplay();
+
+            // Clear wishlist
+            wishlist = {};
+            updateWishlistDisplay();
+
+            // Notify server with updated wishlist state
+            try {
+              if (typeof cartSocket !== 'undefined' && cartSocket.readyState === WebSocket.OPEN) {
+                cartSocket.send(JSON.stringify({ type: 'wishlist_update', data: { items: wishlist } }));
+              }
+            } catch (e) {
+              console.warn('Unable to send wishlist_update via websocket', e);
+            }
+
+            // Close wishlist sidebar and show message
+            const wishlistOffcanvas = document.getElementById('offcanvasWishlist');
+            const offcanvas = new bootstrap.Offcanvas(wishlistOffcanvas);
+            offcanvas.hide();
+
+            alert('✓ All items moved to cart!');
+          });
+
+          // Clear wishlist
+          clearWishlistBtn.addEventListener('click', function() {
+            if (Object.keys(wishlist).length === 0) return;
+          
+            if (confirm('Clear your entire wishlist?')) {
+              wishlist = {};
+              updateWishlistDisplay();
+              console.log('Wishlist cleared');
+            }
+          });
+
+          // Initialize wishlist on page load
+          loadWishlistFromStorage();
+          updateWishlistDisplay();
+        })();
 
       cartSocket.onclose = function(e) {
         console.log('Cart WebSocket connection closed');
@@ -1081,16 +1355,16 @@
     </div>  -->
     <!--End of the side bar menu-->
 
-    <header>
+    <header class="position-fixed top-0 w-100 start-0" style="background-color: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px); z-index: 1030; padding: 0.75rem 0;">
       <!--Logo style on the navbar-->
-      <div class="container-fluid">
-        <div class="row py-3 border-bottom">
+     <div class="container-fluid">
+        <div class="row py-0 border-top align-items-top">
           <div
-            class="col-sm-4 col-lg-2 text-center text-sm-start d-flex gap-3 justify-content-center justify-content-md-start"
+            class="col-sm-4 col-lg-2 d-flex align-items-top justify-content-top justify-content-sm-start"
           >
-            <div class="d-flex align-items-center my-3 my-sm-0">
+            <div class="d-flex align-items-center">
               <a href="{% url 'index' %}">
-                <img src="{% static 'images/logo9.svg' %}" alt="logo" class="img-fluid" />
+                <img src="{% static 'images/logo9.svg' %}" alt="logo" class="img-fluid" style="max-height:72px;" />
               </a>
             </div><!--
             <button
@@ -1106,8 +1380,8 @@
             </button> -->
           </div>
           <!--Drop down on the navbar-->
-          <div class="col-sm-6 offset-sm-2 offset-md-0 col-lg-4">
-            <div class="search-bar row bg-light p-2 rounded-4">
+          <div class="col-10 col-md-auto flex-grow-1 px-3 d-flex justify-content-center">
+            <div class="search-bar d-flex align-items-center bg-light px-3 py-2 rounded-4" style="min-width: 300px; max-width: 500px; width: 50%;">
               <!--
               <div class="col-md-4 d-none d-md-block">
                 <select class="form-select border-0 bg-transparent">
@@ -1119,7 +1393,7 @@
               </div>
               -->
               <!--The search Panel on the navbar-->
-              <div class="col-11 col-md-7">
+              <div class="flex-grow-1">
                 <form
                   id="search-form"
                   class="text-center"
@@ -1133,12 +1407,13 @@
                   />
                 </form>
               </div>
-              <div class="col-1">
+              <div class="d-flex align-items-center ms-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
                   height="24"
                   viewBox="0 0 24 24"
+                  style="cursor: pointer; flex-shrink: 0;"
                 >
                   <path
                     fill="currentColor"
@@ -1150,7 +1425,7 @@
           </div>
 
           <!-- Tabs on the Navbar -->
-          <div class="col-lg-4">
+          <div class="col-12 col-lg-auto d-flex justify-content-center">
             <ul
               class="navbar-nav list-unstyled d-flex flex-row gap-3 gap-lg-5 justify-content-center flex-wrap align-items-center mb-0 fw-bold text-uppercase text-dark"
             >
@@ -1233,7 +1508,8 @@
                 </a>
               </li>
               <li>
-                <a href="#" class="p-2 mx-1">
+                <a href="#" class="p-2 mx-1" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWishlist">
+                  <span class="badge bg-danger rounded-pill" id="wishlist-badge-count" style="position: absolute; font-size: 0.6rem;">0</span>
                   <svg width="24" height="24">
                     <use xlink:href="#wishlist"></use>
                   </svg>
@@ -1440,29 +1716,59 @@
     <script src="{% static 'js/script.js' %}"></script>
     <script>
       (function () {
-        // Cart storage - stores items as {productId: {name, price, qty}}
-        const cart = {};
-        
         // DOM elements
         const badge = document.getElementById('cart-badge-count');
         const sidebarCount = document.getElementById('cart-sidebar-count');
         const sidebarItems = document.getElementById('cart-sidebar-items');
         const sidebarTotal = document.getElementById('cart-sidebar-total');
+        const isUserAuthenticated = {% if user.is_authenticated %}'true'{% else %}'false'{% endif %};
+
+        // Get CSRF token from cookie
+        function getCsrfToken() {
+          let csrfToken = '';
+          const name = 'csrftoken';
+          if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                csrfToken = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+              }
+            }
+          }
+          return csrfToken;
+        }
 
         function formatMoney(value) {
           return 'Ksh.' + parseFloat(value).toFixed(2);
         }
 
-        function updateCartDisplay() {
-          // Calculate totals
-          let totalQty = 0;
-          let totalPrice = 0;
-          
-          for (const productId in cart) {
-            const item = cart[productId];
-            totalQty += item.qty;
-            totalPrice += item.price * item.qty;
+        // Load cart from backend API (only if user is authenticated)
+        function loadCartFromBackend() {
+          if (isUserAuthenticated !== 'true') {
+            // User not authenticated, show empty cart
+            if (sidebarItems) {
+              sidebarItems.innerHTML = '<li class="list-group-item text-center text-muted">Log in to view your cart.</li>';
+            }
+            return;
           }
+
+          fetch('{% url "get_cart" %}')
+            .then(response => response.json())
+            .then(data => updateCartDisplay(data))
+            .catch(error => console.error('Error loading cart from backend:', error));
+        }
+
+        function updateCartDisplay(data) {
+          // Calculate totals
+          const items = data.items || [];
+          const cartTotal = data.total || 0;
+          
+          let totalQty = 0;
+          items.forEach(item => {
+            totalQty += item.quantity;
+          });
 
           // Update badge
           if (badge) {
@@ -1481,30 +1787,62 @@
             if (totalQty === 0) {
               sidebarItems.innerHTML = '<li class="list-group-item text-center text-muted">Your cart is empty.</li>';
             } else {
-              for (const productId in cart) {
-                const item = cart[productId];
+              items.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'list-group-item d-flex justify-content-between lh-sm';
-                const lineTotal = item.price * item.qty;
+                const lineTotal = item.price * item.quantity;
                 li.innerHTML = 
                   '<div>' +
                     '<h6 class="my-0">' + item.name + '</h6>' +
-                    '<small class="text-body-secondary">Qty: ' + item.qty + '</small>' +
+                    '<small class="text-body-secondary">Qty: ' + item.quantity + '</small>' +
                   '</div>' +
                   '<span class="text-body-secondary">' + formatMoney(lineTotal) + '</span>';
                 sidebarItems.appendChild(li);
-              }
+              });
             }
           }
 
           // Update sidebar total
           if (sidebarTotal) {
-            sidebarTotal.textContent = formatMoney(totalPrice);
+            sidebarTotal.textContent = formatMoney(cartTotal);
           }
         }
 
-        // Initialize display
-        updateCartDisplay();
+        // Add item to backend cart
+        function addToBackendCart(productId, quantity) {
+          if (isUserAuthenticated !== 'true') {
+            alert('Please log in to add items to your cart.');
+            window.location.href = '{% url "login" %}';
+            return;
+          }
+
+          const csrfToken = getCsrfToken();
+          console.log('CSRF Token:', csrfToken);
+
+          fetch('{% url "update_cart" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+              product_id: productId,
+              quantity: quantity,
+            }),
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                loadCartFromBackend();
+              } else {
+                alert('Error adding item to cart: ' + (data.error || 'Unknown error'));
+              }
+            })
+            .catch(error => console.error('Error adding to cart:', error));
+        }
+
+        // Load cart on page load
+        loadCartFromBackend();
 
         // Handle add to cart clicks
         document.addEventListener('click', function (e) {
@@ -1514,38 +1852,15 @@
 
           // Get product data from data attributes
           let productId = btn.getAttribute('data-product-id');
-          let productName = btn.getAttribute('data-product-name') || 'Product';
-          let productPrice = parseFloat(btn.getAttribute('data-product-price') || '0');
+          let productName = btn.getAttribute('data-product-name');
+          let productPrice = btn.getAttribute('data-product-price');
 
-          // If missing productId, generate one from the product name and current time
-          if (!productId) {
-            const productItem = btn.closest('.product-item');
-            if (productItem) {
-              const nameEl = productItem.querySelector('h3');
-              if (nameEl) {
-                productName = nameEl.textContent.trim();
-              }
-              
-              const priceEl = productItem.querySelector('.text-dark.fw-semibold');
-              if (priceEl) {
-                const priceText = priceEl.textContent.trim();
-                const priceMatch = priceText.match(/[\d.]+/);
-                if (priceMatch) {
-                  productPrice = parseFloat(priceMatch[0]);
-                }
-              }
-            }
-            
-            // Generate ID from name and timestamp
-            productId = 'product_' + productName.replace(/\s+/g, '_').toLowerCase() + '_' + Date.now();
-            console.log('Generated productId:', productId, 'Name:', productName, 'Price:', productPrice);
-          }
-
-          if (!productId || productPrice <= 0) {
-            console.warn('Missing or invalid product data', { productId, productName, productPrice });
-            alert('Unable to add item to cart. Product information is incomplete.');
-            return;
-          }
+          console.log('Button clicked - Debug info:', {
+            productId,
+            productName,
+            productPrice,
+            buttonHTML: btn.outerHTML
+          });
 
           // Find the quantity input in the same product card
           let qty = 1;
@@ -1560,21 +1875,44 @@
             }
           }
 
-          // Add to cart
-          if (cart[productId]) {
-            cart[productId].qty += qty;
-          } else {
-            cart[productId] = {
-              name: productName,
-              price: productPrice,
-              qty: qty
-            };
+          // If productId provided, parse and proceed
+          if (productId) {
+            productId = parseInt(productId, 10);
+            if (isNaN(productId)) {
+              alert('Error: Invalid product ID: ' + productId);
+              return;
+            }
+
+            console.log('Adding to cart (direct):', { productId, productName, productPrice, qty });
+            addToBackendCart(productId, qty);
+            return;
           }
 
-          // Update display and show feedback
-          updateCartDisplay();
-          console.log('Item added to cart:', { productId, productName, productPrice, qty });
-          
+          // Fallback: if productId missing, attempt to lookup by product name
+          if (!productName) {
+            alert('Error: Product ID and name are missing. Cannot add to cart.');
+            return;
+          }
+
+          // Call product lookup endpoint
+          fetch('{% url "find_product_by_name" %}?name=' + encodeURIComponent(productName))
+            .then(resp => {
+              if (!resp.ok) throw new Error('Product lookup failed');
+              return resp.json();
+            })
+            .then(data => {
+              if (data && data.id) {
+                console.log('Adding to cart (lookup):', { productId: data.id, productName: data.name, productPrice: data.price, qty });
+                addToBackendCart(data.id, qty);
+              } else {
+                alert('Product lookup did not return an id.');
+              }
+            })
+            .catch(err => {
+              console.error('Product lookup error:', err);
+              alert('Could not find product by name. Please contact support.');
+            });
+
           // Show success feedback
           const originalText = btn.innerHTML;
           btn.innerHTML = '<svg width="18" height="18"><use xlink:href="#check"></use></svg> Added!';
@@ -1583,6 +1921,11 @@
             btn.innerHTML = originalText;
             btn.classList.remove('disabled');
           }, 2000);
+        });
+
+        // Reload cart when page comes into focus
+        window.addEventListener('focus', function() {
+          loadCartFromBackend();
         });
       })();
     </script>

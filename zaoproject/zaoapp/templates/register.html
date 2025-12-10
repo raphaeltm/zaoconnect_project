@@ -1,13 +1,47 @@
 {% extends "base.html" %}
 {% block content %}
-    <div class="container mt-4">
-        <h2>Register Here</h2>
-        <form method="POST">
-            {% csrf_token %}
+<div class="d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 200px); padding: 40px 20px;">
+    <div class="card shadow-lg" style="width: 100%; max-width: 500px; border: none; border-radius: 12px;">
+        <div class="card-body p-5">
+            <h2 class="card-title text-center mb-4" style="font-weight: 700; color: #364127;">Register Here</h2>
             
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Register</button>
-        </form>
+            <form method="POST" class="form-group">
+                {% csrf_token %}
+                
+                <!-- Custom form styling -->
+                {% for field in form %}
+                    <div class="mb-3">
+                        {% if field.label %}
+                            <label for="{{ field.id_for_label }}" class="form-label" style="font-weight: 500; color: #364127;">{{ field.label }}</label>
+                        {% endif %}
+                        {% if field.field.widget.input_type == 'password' %}
+                            <input type="password" name="{{ field.name }}" class="form-control" id="{{ field.id_for_label }}" placeholder="{{ field.label }}" style="border-radius: 8px; border: 1px solid #ddd; padding: 10px 15px;" required>
+                        {% elif field.field.widget.input_type == 'text' or field.field.widget.input_type == 'email' %}
+                            <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" class="form-control" id="{{ field.id_for_label }}" placeholder="{{ field.label }}" style="border-radius: 8px; border: 1px solid #ddd; padding: 10px 15px;" required>
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <button type="submit" class="btn btn-primary w-100 mt-3" style="padding: 12px; font-weight: 600; border-radius: 8px; border: none; background: linear-gradient(135deg, #6BB252 0%, #5a9640 100%); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(107, 178, 82, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">Register</button>
+            </form>
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger mt-3" role="alert">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div class="text-center mt-4">
+                <p style="color: #666; margin: 0;">Already have an account? <a href="{% url 'login' %}" style="color: #6BB252; text-decoration: none; font-weight: 600;">Login here</a></p>
+            </div>
+        </div>
     </div>
-
+</div>
 {% endblock %}

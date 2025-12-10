@@ -9,7 +9,7 @@
       
       <div id="cart-items-container">
         <div class="alert alert-info text-center">
-          <p>Your cart is empty. <a href="{% url 'index' %}">Continue shopping</a></p>
+          <p>Loading cart...</p>
         </div>
       </div>
     </div>
@@ -48,19 +48,197 @@
 </div>
 
 <script>
-  // Initialize cart on page load
+  // Format price
+  function formatMoney(value) {
+    return 'Ksh.' + parseFloat(value).toFixed(2);
+  }
+
+  // Load cart from backend API
+  function loadCart() {
+    fetch('{% url "get_cart" %}')
+      .then(response => response.json())
+      .then(data => displayCartItems(data))
+      .catch(error => console.error('Error loading cart:', error));
+  }
+
+  // Display cart items
+  function displayCartItems(data) {
+    const container = document.getElementById('cart-items-container');
+    const subtotalEl = document.getElementById('subtotal');
+    const shippingEl = document.getElementById('shipping');
+    const totalEl = document.getElementById('cart-total');
+
+    const items = data.items || [];
+    const cartTotal = data.total || 0;
+
+    if (items.length === 0) {
+      container.innerHTML = `
+        <div class="alert alert-info text-center">
+          <p>Your cart is empty. <a href="{% url 'index' %}">Continue shopping</a></p>
+        </div>
+      `;
+      subtotalEl.textContent = formatMoney(0);
+      shippingEl.textContent = formatMoney(0);
+      totalEl.textContent = formatMoney(0);
+      return;
+    }
+
+    // Build cart items table
+    let html = `
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Subtotal</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    items.forEach(item => {
+      const lineTotal = item.price * item.quantity;
+      html += `
+        <tr>
+          <td>
+            <h6 class="mb-1">${item.name}</h6>
+          </td>
+          <td>${formatMoney(item.price)}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-outline-secondary qty-decrease" data-product-id="${item.product_id}">−</button>
+              <input type="number" class="form-control form-control-sm qty-input" 
+                     value="${item.quantity}" min="1" data-product-id="${item.product_id}" 
+                     style="width: 60px; text-align: center;">
+              <button class="btn btn-sm btn-outline-secondary qty-increase" data-product-id="${item.product_id}">+</button>
+            </div>
+          </td>
+          <td>${formatMoney(lineTotal)}</td>
+          <td>
+            <button class="btn btn-sm btn-danger remove-item" data-product-id="${item.product_id}">
+              Remove
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    const shippingCost = cartTotal > 0 ? 200 : 0;
+    const total = cartTotal + shippingCost;
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    container.innerHTML = html;
+
+    // Update totals
+    subtotalEl.textContent = formatMoney(cartTotal);
+    shippingEl.textContent = formatMoney(shippingCost);
+    totalEl.textContent = formatMoney(total);
+
+    // Attach event listeners
+    attachCartEventListeners();
+  }
+
+  // Update cart item on server
+  function updateCartItem(productId, quantity) {
+    fetch('{% url "update_cart" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+      },
+      body: JSON.stringify({
+        product_id: productId,
+        quantity: quantity,
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          loadCart();
+        } else {
+          alert('Error updating cart: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(error => console.error('Error updating cart:', error));
+  }
+
+  // Attach event listeners for cart actions
+  function attachCartEventListeners() {
+    // Quantity increase buttons
+    document.querySelectorAll('.qty-increase').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const productId = parseInt(this.getAttribute('data-product-id'));
+        const inputEl = document.querySelector(`input[data-product-id="${productId}"]`);
+        const newQty = parseInt(inputEl.value) + 1;
+        updateCartItem(productId, newQty);
+      });
+    });
+
+    // Quantity decrease buttons
+    document.querySelectorAll('.qty-decrease').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const productId = parseInt(this.getAttribute('data-product-id'));
+        const inputEl = document.querySelector(`input[data-product-id="${productId}"]`);
+        const newQty = parseInt(inputEl.value) - 1;
+        if (newQty > 0) {
+          updateCartItem(productId, newQty);
+        }
+      });
+    });
+
+    // Quantity input fields
+    document.querySelectorAll('.qty-input').forEach(input => {
+      input.addEventListener('change', function() {
+        const productId = parseInt(this.getAttribute('data-product-id'));
+        const newQty = parseInt(this.value);
+        if (newQty > 0) {
+          updateCartItem(productId, newQty);
+        } else {
+          this.value = '1';
+        }
+      });
+    });
+
+    // Remove item buttons
+    document.querySelectorAll('.remove-item').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const productId = parseInt(this.getAttribute('data-product-id'));
+        if (confirm('Remove this item from cart?')) {
+          updateCartItem(productId, 0);
+        }
+      });
+    });
+  }
+
+  // Initialize on page load
   document.addEventListener('DOMContentLoaded', function() {
-    // Load cart from localStorage or session
     loadCart();
   });
 
-  function loadCart() {
-    // Placeholder for loading cart data
-    // where you connect the backend or local storage
-  }
-
+  // Checkout button
   document.getElementById('checkout-btn').addEventListener('click', function() {
-    alert('Checkout functionality coming soon!');
+    fetch('{% url "get_cart" %}')
+      .then(response => response.json())
+      .then(data => {
+        if (data.items.length === 0) {
+          alert('Your cart is empty. Add items before checking out.');
+          return;
+        }
+        window.location.href = '{% url "order" %}';
+      });
+  });
+
+  // Reload cart when page comes into focus
+  window.addEventListener('focus', function() {
+    loadCart();
   });
 </script>
 {% endblock %}

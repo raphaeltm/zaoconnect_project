@@ -8,7 +8,10 @@
         <p class="text-uppercase text-muted small mb-1">Dashboard</p>
         <h1 class="h3 mb-0">Manage Products</h1>
       </div>
-      <a href="{% url 'product_create' %}" class="btn btn-primary">Add product</a>
+      <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'product_create' %}" class="btn btn-primary">Add product</a>
+        <a href="{% url 'product_admin_report_pdf' %}" class="btn btn-outline-primary" target="_blank">Generate PDF Report</a>
+      </div>
     </div>
 
     {% if messages %}

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Contact, Product
+from .models import Contact, Product, Cart, CartItem
 
 
 @admin.register(Product)
@@ -30,3 +30,26 @@ class ProductAdmin(admin.ModelAdmin):
 class ContactAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'created_at')
     search_fields = ('name', 'email')
+
+
+class CartItemInline(admin.TabularInline):
+    model = CartItem
+    extra = 0
+    readonly_fields = ('product', 'quantity', 'created_at', 'updated_at')
+    fields = ('product', 'quantity', 'created_at', 'updated_at')
+
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('user', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'user__email')
+    readonly_fields = ('created_at', 'updated_at')
+    inlines = [CartItemInline]
+
+
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ('cart', 'product', 'quantity', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('cart__user__username', 'product__name')
+    readonly_fields = ('created_at', 'updated_at')

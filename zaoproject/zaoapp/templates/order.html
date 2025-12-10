@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row">
+    <div class="col-lg-8">
+      <h2 class="mb-4">Delivery Information</h2>
+      
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <form id="checkout-form">
+            <!-- Country Selection -->
+            <div class="mb-4">
+              <label for="country-select" class="form-label fw-semibold">Country</label>
+              <select class="form-select form-select-lg" id="country-select" required>
+                <option value="">Select a country...</option>
+                <option value="KE" selected>Kenya</option>
+                <option value="UG">Uganda</option>
+                <option value="TZ">Tanzania</option>
+                <option value="RW">Rwanda</option>
+                <option value="BU">Burundi</option>
+                <option value="ET">Ethiopia</option>
+                <option value="SS">South Sudan</option>
+              </select>
+              <small class="text-muted">Select from East African countries</small>
+            </div>
+
+            <!-- County/Region Selection -->
+            <div class="mb-4">
+              <label for="county-select" class="form-label fw-semibold">County/Region</label>
+              <select class="form-select form-select-lg" id="county-select" required>
+                <option value="">Select a county...</option>
+              </select>
+              <small class="text-muted">Top counties in the selected country</small>
+            </div>
+
+            <!-- Mobile Number -->
+            <div class="mb-4">
+              <label for="mobile-number" class="form-label fw-semibold">Mobile Number</label>
+              <div class="input-group input-group-lg">
+                <span class="input-group-text fw-semibold" id="country-code">+254</span>
+                <input 
+                  type="tel" 
+                  class="form-control" 
+                  id="mobile-number" 
+                  placeholder="712345678"
+                  pattern="[0-9]{9,10}"
+                  required>
+              </div>
+              <small class="text-muted">Enter 9-10 digit mobile number without country code</small>
+            </div>
+
+            <!-- Delivery Address -->
+            <div class="mb-4">
+              <label for="delivery-address" class="form-label fw-semibold">Delivery Address (Optional)</label>
+              <textarea 
+                class="form-control" 
+                id="delivery-address" 
+                rows="3" 
+                placeholder="Enter your specific delivery address (e.g., street, building number, landmarks)"></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                Proceed to Payment
+              </button>
+              <a href="{% url 'cart' %}" class="btn btn-outline-secondary btn-lg">
+                Back to Cart
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary Sidebar -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm sticky-top" style="top: 20px;">
+        <div class="card-body">
+          <h5 class="card-title mb-4">Order Summary</h5>
+          
+          <div id="order-items-summary">
+            <p class="text-muted text-center">Loading...</p>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="d-flex justify-content-between mb-2">
+            <span>Subtotal:</span>
+            <span id="summary-subtotal">Ksh.0.00</span>
+          </div>
+          
+          <div class="d-flex justify-content-between mb-3">
+            <span>Shipping:</span>
+            <span id="summary-shipping">Ksh.200.00</span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-3 border-top pt-3">
+            <strong>Total:</strong>
+            <strong id="summary-total">Ksh.0.00</strong>
+          </div>
+
+          <div class="alert alert-info small mb-0">
+            <strong>Note:</strong> You will be able to review and confirm your order on the next page before making payment.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cart storage key
+  const cartStorageKey = 'zaoconnect_cart';
+
+  // East African countries and their counties
+  const countriesData = {
+    KE: {
+      name: 'Kenya',
+      code: '+254',
+      counties: [
+        'Nairobi',
+        'Mombasa',
+        'Kisumu',
+        'Nakuru',
+        'Machakos',
+        'Kericho',
+        'Eldoret',
+        'Nyeri',
+        'Murang\'a',
+        'Kiambu'
+      ]
+    },
+    UG: {
+      name: 'Uganda',
+      code: '+256',
+      counties: [
+        'Kampala',
+        'Jinja',
+        'Gulu',
+        'Lira',
+        'Mbale',
+        'Mbarara',
+        'Kasese',
+        'Masaka',
+        'Fort Portal',
+        'Arua'
+      ]
+    },
+    TZ: {
+      name: 'Tanzania',
+      code: '+255',
+      counties: [
+        'Dar es Salaam',
+        'Dodoma',
+        'Arusha',
+        'Moshi',
+        'Iringa',
+        'Mbeya',
+        'Songea',
+        'Tabora',
+        'Mwanza',
+        'Kigoma'
+      ]
+    },
+    RW: {
+      name: 'Rwanda',
+      code: '+250',
+      counties: [
+        'Kigali',
+        'Muhanga',
+        'Huye',
+        'Ruhengeri',
+        'Gitarama',
+        'Butare',
+        'Gisenyi',
+        'Cyangugu',
+        'Rwamagana',
+        'Kayonza'
+      ]
+    },
+    BU: {
+      name: 'Burundi',
+      code: '+257',
+      counties: [
+        'Bujumbura',
+        'Gitega',
+        'Ngozi',
+        'Muyinga',
+        'Kirundo',
+        'Cankuzo',
+        'Ruyigi',
+        'Muramvya',
+        'Nzeyimana',
+        'Makamba'
+      ]
+    },
+    ET: {
+      name: 'Ethiopia',
+      code: '+251',
+      counties: [
+        'Addis Ababa',
+        'Dire Dawa',
+        'Adama',
+        'Awasa',
+        'Mekelle',
+        'Bahir Dar',
+        'Gondar',
+        'Adwa',
+        'Jijiga',
+        'Harar'
+      ]
+    },
+    SS: {
+      name: 'South Sudan',
+      code: '+211',
+      counties: [
+        'Juba',
+        'Wau',
+        'Malakal',
+        'Kassala',
+        'Bentiu',
+        'Yambio',
+        'Torit',
+        'Renk',
+        'Kapoeta',
+        'Gogrial'
+      ]
+    }
+  };
+
+  // Format money function
+  function formatMoney(value) {
+    return 'Ksh.' + parseFloat(value).toFixed(2);
+  }
+
+  // Load cart from localStorage
+  function loadCartFromStorage() {
+    try {
+      const stored = localStorage.getItem(cartStorageKey);
+      return stored ? JSON.parse(stored) : {};
+    } catch (e) {
+      console.error('Error loading cart from localStorage:', e);
+      return {};
+    }
+  }
+
+  // Display order summary
+  function displayOrderSummary() {
+    const cart = loadCartFromStorage();
+    const container = document.getElementById('order-items-summary');
+    const subtotalEl = document.getElementById('summary-subtotal');
+    const shippingEl = document.getElementById('summary-shipping');
+    const totalEl = document.getElementById('summary-total');
+
+    if (Object.keys(cart).length === 0) {
+      container.innerHTML = `
+        <div class="alert alert-warning">
+          <p class="mb-0">Your cart is empty. <a href="{% url 'index' %}">Continue shopping</a></p>
+        </div>
+      `;
+      return;
+    }
+
+    // Build items list
+    let html = '<div class="mb-3">';
+    let subtotal = 0;
+
+    for (const productId in cart) {
+      const item = cart[productId];
+      const lineTotal = item.price * item.qty;
+      subtotal += lineTotal;
+
+      html += `
+        <div class="d-flex justify-content-between mb-2 small">
+          <div>
+            <span class="text-dark">${item.name}</span><br>
+            <span class="text-muted">×${item.qty}</span>
+          </div>
+          <span class="fw-semibold">${formatMoney(lineTotal)}</span>
+        </div>
+      `;
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+
+    // Update totals
+    const shippingCost = 200;
+    const total = subtotal + shippingCost;
+
+    subtotalEl.textContent = formatMoney(subtotal);
+    shippingEl.textContent = formatMoney(shippingCost);
+    totalEl.textContent = formatMoney(total);
+  }
+
+  // Update counties based on selected country
+  function updateCounties() {
+    const countrySelect = document.getElementById('country-select');
+    const countySelect = document.getElementById('county-select');
+    const countryCodeSpan = document.getElementById('country-code');
+    const selectedCountry = countrySelect.value;
+
+    if (selectedCountry && countriesData[selectedCountry]) {
+      const countryData = countriesData[selectedCountry];
+      
+      // Update country code
+      countryCodeSpan.textContent = countryData.code;
+
+      // Populate counties
+      countySelect.innerHTML = '<option value="">Select a county...</option>';
+      countryData.counties.forEach(county => {
+        const option = document.createElement('option');
+        option.value = county;
+        option.textContent = county;
+        countySelect.appendChild(option);
+      });
+    } else {
+      countySelect.innerHTML = '<option value="">Select a county...</option>';
+    }
+  }
+
+  // Handle form submission
+  document.getElementById('checkout-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const countrySelect = document.getElementById('country-select');
+    const countySelect = document.getElementById('county-select');
+    const mobileNumber = document.getElementById('mobile-number');
+    const deliveryAddress = document.getElementById('delivery-address');
+
+    const country = countrySelect.value;
+    const county = countySelect.value;
+    const mobile = mobileNumber.value;
+    const address = deliveryAddress.value;
+
+    // Validate
+    if (!country || !county || !mobile) {
+      alert('Please fill in all required fields (Country, County, Mobile Number)');
+      return;
+    }
+
+    // Get full mobile number with country code
+    const countryData = countriesData[country];
+    const fullMobileNumber = countryData.code + mobile;
+
+    // Store order information
+    const orderInfo = {
+      country: countryData.name,
+      countryCode: country,
+      county: county,
+      mobileNumber: fullMobileNumber,
+      deliveryAddress: address,
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      localStorage.setItem('zaoconnect_order', JSON.stringify(orderInfo));
+      console.log('Order information saved:', orderInfo);
+      
+      // Show success and redirect
+      alert(`✓ Delivery information saved!\n\nCountry: ${orderInfo.country}\nCounty: ${county}\nMobile: ${fullMobileNumber}\n\nPayment page coming soon!`);
+    } catch (e) {
+      console.error('Error saving order information:', e);
+      alert('Error saving delivery information. Please try again.');
+    }
+  });
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check if cart exists
+    const cart = loadCartFromStorage();
+    if (Object.keys(cart).length === 0) {
+      const confirmRedirect = confirm('Your cart is empty. Go back to shopping?');
+      if (confirmRedirect) {
+        window.location.href = '{% url "index" %}';
+      }
+    }
+
+    // Display order summary
+    displayOrderSummary();
+
+    // Set default country to Kenya
+    document.getElementById('country-select').value = 'KE';
+    updateCounties();
+
+    // Add event listener for country selection
+    document.getElementById('country-select').addEventListener('change', updateCounties);
+  });
+</script>
+{% endblock %}

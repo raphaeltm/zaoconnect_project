@@ -158,7 +158,6 @@ h1,h2,h3,h4,h5,h6 {
 .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
   --bs-gutter-x: 3rem;
 }
-/*----------------------------------------------*/
 /* 6. SITE STRUCTURE */
 /*----------------------------------------------*/
 /* 6.1 Header
