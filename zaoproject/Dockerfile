@@ -10,4 +10,4 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput
 
-CMD python -m gunicorn zaoproject.asgi:application -k uvicorn_worker.UvicornWorker --bind 0.0.0.0:8000
+CMD python manage.py migrate && python -m gunicorn zaoproject.asgi:application -k uvicorn_worker.UvicornWorker --bind 0.0.0.0:8000
