@@ -14,6 +14,11 @@ jobs:
       id-token: write
 
     steps:
+    - name: Echo Something
+      run: |
+        echo "Deploying to Defang Playground Environment"
+        echo "=============================="
+
     - name: Checkout Repo
       uses: actions/checkout@v4
 
